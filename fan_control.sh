@@ -11,6 +11,7 @@
 IDRAC_IP="IP address of iDRAC"
 IDRAC_USER="user"
 IDRAC_PASSWORD="passowrd"
+LOG_FILE=/var/log/fan_control.log
 # Fan speed in %
 SPEED0="0x00"
 SPEED5="0x05"
@@ -26,25 +27,27 @@ TEMP_SENSOR="04h"   # Inlet Temp
 #TEMP_SENSOR="0Eh"  # CPU 1 Temp
 #TEMP_SENSOR="0Fh"  # CPU 2 Temp
 
+truncate -s 0 $LOG_FILE # Clear logs
+
 # Get system date & time.
 DATE=$(date +%d-%m-%Y\ %H:%M:%S)
-echo "Date $DATE"
+echo "Date $DATE" >> $LOG_FILE
 
 # Get temperature from iDARC.
 T=$(ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD sdr type temperature | grep $TEMP_SENSOR | cut -d"|" -f5 | cut -d" " -f2)
-echo "--> iDRAC IP Address: $IDRAC_IP"
-echo "--> Current Inlet Temp: $T"
+echo "--> iDRAC IP Address: $IDRAC_IP" >> $LOG_FILE
+echo "--> Current Inlet Temp: $T" >> $LOG_FILE
 
 # If ambient temperature is above 35deg C enable dynamic control and exit, if below set manual control.
 if [[ $T > $TEMP_THRESHOLD ]]
 then
-  echo "--> Temperature is above 35deg C"
-  echo "--> Enabled dynamic fan control"
+  echo "--> Temperature is above 35deg C" >> $LOG_FILE
+  echo "--> Enabled dynamic fan control" >> $LOG_FILE
   ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD raw 0x30 0x30 0x01 0x01
   exit 1
 else
-  echo "--> Temperature is below 35deg C"
-  echo "--> Disabled dynamic fan control"
+  echo "--> Temperature is below 35deg C" >> $LOG_FILE
+  echo "--> Disabled dynamic fan control" >> $LOG_FILE
   ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD raw 0x30 0x30 0x01 0x00
 fi
 
@@ -52,24 +55,24 @@ fi
 # If inlet temperature between 0 and 19deg C then set fans to 15%.
 if [ "$T" -ge 0 ] && [ "$T" -le 19 ]
 then
-  echo "--> Setting fan speed to 15%"
+  echo "--> Setting fan speed to 15%" >> $LOG_FILE
   ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD raw 0x30 0x30 0x02 0xff $SPEED15
 
 # If inlet temperature between 20 and 24deg C then set fans to 20%
 elif [ "$T" -ge 20 ] && [ "$T" -le 24 ]
 then
-  echo "--> Setting fan speed to 20%"
+  echo "--> Setting fan speed to 20%" >> $LOG_FILE
   ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD raw 0x30 0x30 0x02 0xff $SPEED20
 
 # If inlet temperature between 25 and 29deg C then set fans to 25%
 elif [ "$T" -ge 25 ] && [ "$T" -le 29 ]
 then
-  echo "--> Setting fan speed to 25%"
+  echo "--> Setting fan speed to 25%" >> $LOG_FILE
   ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD raw 0x30 0x30 0x02 0xff $SPEED25
 
 # If inlet temperature between 30 and 35deg C then set fans to 30%
 elif [ "$T" -ge 30 ] && [ "$T" -le 34 ]
 then
-  echo "--> Setting fan speed to 30%"
+  echo "--> Setting fan speed to 30%" >> $LOG_FILE
   ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD raw 0x30 0x30 0x02 0xff $SPEED30
 fi
