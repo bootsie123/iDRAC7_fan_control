@@ -44,7 +44,7 @@ then
   echo "--> Temperature is above 35deg C" >> $LOG_FILE
   echo "--> Enabled dynamic fan control" >> $LOG_FILE
   ipmitool -I lanplus -H $IDRAC_IP -U $IDRAC_USER -P $IDRAC_PASSWORD raw 0x30 0x30 0x01 0x01
-  exit 1
+  exit 0
 else
   echo "--> Temperature is below 35deg C" >> $LOG_FILE
   echo "--> Disabled dynamic fan control" >> $LOG_FILE
